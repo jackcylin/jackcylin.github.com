@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sample</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script>
+        var active = "group1";
+        var groups = [
+            {idx: 0, id: "group1", name: "Group 1"},
+            {idx: 1, id: "group2", name: "Group 2"},
+            {idx: 2, id: "group3", name: "Group 3"},
+            {idx: 3, id: "group4", name: "Group 4"}
+        ];
+        var members = [
+            {id: 0, name: "容依靜"},
+            {id: 1, name: "商萱涵"},
+            {id: 2, name: "艾文君"},
+            {id: 3, name: "陸淑"},
+            {id: 4, name: "軒轅哲宏"},
+            {id: 5, name: "宋俊"},
+            {id: 6, name: "紀貞佩"},
+            {id: 7, name: "紅冠豪"},
+            {id: 8, name: "卞佳琬"},
+            {id: 9, name: "羿芬"},
+            {id: 10, name: "臧君"},
+            {id: 11, name: "武惠"},
+            {id: 12, name: "盧佳"},
+            {id: 13, name: "祖冠"},
+            {id: 14, name: "晉冠"},
+            {id: 15, name: "壽華"},
+            {id: 16, name: "臧思"},
+            {id: 17, name: "游詩"},
+            {id: 18, name: "凌君嘉"},
+            {id: 19, name: "訾安"},
+            {id: 20, name: "賁心雅"},
+            {id: 21, name: "況詩"},
+            {id: 22, name: "明翰家"},
+            {id: 23, name: "佟詩"},
+            {id: 24, name: "公冶華"},
+            {id: 25, name: "全詩"},
+            {id: 26, name: "瞿建"},
+            {id: 27, name: "景蓉婷"},
+            {id: 28, name: "匡霖"},
+            {id: 29, name: "汲穎"}
+        ];
+        $(document).ready(function () {
+            var ul = $('<ul class="nav nav-tabs" id="myTab" role="tablist">')
+            for (var group of groups) {
+                var li = $('<li class="nav-item" role="presentation"/>')
+                var tab = $(`
+                    <button
+                        class="nav-link ${group.id === active? "active": ""}"
+                        id="${group.id}-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#${group.id}"
+                        type="button"
+                        role="tab"
+                        aria-controls="${group.id}"
+                        aria-selected="true">
+                    ${group.name}
+                    </button>`)
+
+                li.append(tab)
+                ul.append(li)
+            }
+            $("#container").append(ul)
+
+            var content = $('<div class="tab-content" id="myTabContent">')
+            for (var group of groups) {
+                var data = $(`
+                    <div
+                        class="tab-pane fade ${group.id === active? "show active": ""}"
+                        id="${group.id}"
+                        role="tabpanel"
+                        aria-labelledby="${group.id}-tab"/>`)
+                for (var member of members) {
+                    if (member.id % groups.length === group.idx)
+                        data.append($(`<label>${member.id}: ${member.name}</label><br>`))
+                }
+                content.append(data)
+            }
+            $("#container").append(content)
+        });
+    </script>
+</head>
+<body>
+<div id="container" class="container"/>
+
+</body>
+</html>
