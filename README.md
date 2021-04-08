@@ -7,14 +7,10 @@
  * http://www.richyli.com/name/index.asp
 
 ## Repository
- * git clone https://github.com/jackcylin/julie.git
+ * https://github.com/jackcylin/jackcylin.github.com.git
 
-## HTML viewer
- * https://htmlpreview.github.io/?https://github.com/jackcylin/julie/blob/main/index.html
+## Github Pages
+ * https://pages.github.com/
 
-https://drive.google.com/drive/folders/1B6M3pU1s0SUFIQ8L3CI3gNdlbvyCd7Y8?usp=sharing
-
-1B6M3pU1s0SUFIQ8L3CI3gNdlbvyCd7Y8?usp=sharing1B6M3pU1s0SUFIQ8L3CI3gNdlbvyCd7Y8?usp=sharing
-
-
-https://googledrive.com/host/1B6M3pU1s0SUFIQ8L3CI3gNdlbvyCd7Y8
+## View HTML
+ * https://jackcylin.github.io/
