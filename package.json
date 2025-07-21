@@ -1,28 +1,12 @@
 {
-  "name": "node-template",
+  "name": "web",
   "version": "1.0.0",
-  "main": "web/index.js",
   "license": "UNLICENSED",
-  "scripts": {
-    "nodemon": "./node_modules/nodemon/bin/nodemon.js",
-    "node": "/usr/local/bin/node",
-    "shopify": "shopify",
-    "build": "export $(cat .env | egrep -v '#|^$' | xargs) && shopify app build",
-    "dev": "export $(cat .env.dev | egrep -v '#|^$' | xargs) && shopify app dev",
-    "info": "shopify app info",
-    "generate": "shopify app generate",
-    "deploy": "shopify app deploy",
-    "translate": "./web/frontend/lang/translate.js --translate",
-    "start": "export $(cat .env | egrep -v '#|^$' | xargs) && node web/index",
-    "startmon": "export $(cat .env | egrep -v '#|^$' | xargs) && nodemon web/index"
-  },
+  
   "dependencies": {},
   "author": "jacklin",
   "private": true,
   "workspaces": [
-    "extensions/*",
-    "web",
-    "web/frontend",
-    "app"
+    "scheduling"
   ]
 }
