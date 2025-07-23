@@ -14,7 +14,7 @@ export const GlobalContext = createContext();
 
 // eslint-disable-next-line react/prop-types
 export function GlobalProvider({ children }) {
-  const [sheet] = useState("夜班值班表");
+  const [nightShift] = useState("夜班值班表");
   const [inputs, setInputs] = useState();
   const [year, setYear] = useState();
   const [month, setMonth] = useState();
@@ -33,7 +33,8 @@ export function GlobalProvider({ children }) {
       )
       .join(",")
   );
-  const [workbook, setWorkbook] = useState();
+  const [resource, setResource] = useState();
+  const [clinic, setClinic] = useState();
 
   useEffect(() => {
     const ins = {
@@ -70,10 +71,12 @@ export function GlobalProvider({ children }) {
         setMonth,
         days,
         setDays,
-        sheet,
+        nightShift,
         columns,
-        workbook,
-        setWorkbook,
+        resource,
+        setResource,
+        clinic,
+        setClinic,
         updateStorage,
       }}
     >

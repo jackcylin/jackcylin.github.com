@@ -3,7 +3,7 @@ import "@shopify/polaris/build/esm/styles.css";
 import { DropZone, BlockStack, InlineError } from "@shopify/polaris";
 import XLSX from "xlsx-js-style";
 
-export function ReadFile({ title, setWork, sheet }) {
+export function ReadFile({ title, setWorkbook, sheet }) {
   const [files, setFiles] = useState([]);
   const [error, setError] = useState();
 
@@ -19,14 +19,16 @@ export function ReadFile({ title, setWork, sheet }) {
             cellStyles: true,
           });
           if (wb.Sheets[sheet]) {
-            setWork(wb);
+            setWorkbook(wb);
             setError();
           } else {
             setError(`檔案沒有${sheet}`);
+            setWorkbook();
           }
         } catch (err) {
           console.error(err);
           setError("不是 Excel 檔案");
+          setWorkbook();
         }
       };
 

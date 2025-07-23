@@ -3,26 +3,29 @@ import { BlockStack, Card, IndexTable, Select } from "@shopify/polaris";
 import { useGlobal } from "./hooks/useGlobal";
 import { ReadFile } from "./ReadFile";
 
-export function Schedule() {
+export function Resource() {
   const [departments, setDepartments] = useState({});
   const [selected, setSelected] = useState("");
   const [ready, setReady] = useState(false);
   const {
-    workbook,
-    setWorkbook,
-    sheet,
+    resource,
+    setResource,
+    nightShift,
     includes,
     plans,
     excludes,
     columns,
     days,
   } = useGlobal();
-  const [work, setWork] = useState();
+  const [workbook, setWorkbook] = useState();
 
   useEffect(() => {
-    if (work) setWorkbook(work);
-    else setWorkbook();
-  }, [work]);
+    if (workbook) setResource(workbook);
+    else {
+      setResource();
+      setReady(false)
+    }
+  }, [workbook]);
 
   useEffect(() => {
     let startRow = 1;
@@ -30,8 +33,8 @@ export function Schedule() {
     let pgys = {};
     const missing = [];
 
-    if (workbook) {
-      const workSheet = workbook.Sheets[sheet];
+    if (resource) {
+      const workSheet = resource.Sheets[nightShift];
 
       includes.split(",").forEach((group) => {
         let groupingState = null,
@@ -51,8 +54,8 @@ export function Schedule() {
 
             let halfDepts = [null, null];
 
-            ["A", "B"].forEach((column, index) => {
-              const id = `${column}${row}`;
+            ["A", "B"].forEach((deptColumn, index) => {
+              const id = `${deptColumn}${row}`;
               const cell = workSheet[id];
               if (!excludes.split(",").includes(cell.v)) {
                 halfDepts[index] = cell.v;
@@ -69,11 +72,10 @@ export function Schedule() {
                       }
                       const workingDays = days.split(",");
 
-                      for (
-                        let day = column === "A" ? 1 : 16;
-                        day <= column === "A" ? 15 : 31;
-                        day++
-                      ) {
+                      const startDay = deptColumn === "A" ? 1 : 16,
+                        endDay = deptColumn === "A" ? 15 : 31;
+
+                      for (let day = startDay; day <= endDay; day++) {
                         const column = columns.split(",")[day - 1];
                         const id = `${column}${row}`;
                         const cell = workSheet[id];
@@ -90,70 +92,23 @@ export function Schedule() {
                           continue;
                         }
 
-                        if (dept) {
-                          const isLeave = cell.s?.fgColor?.rgb === "B4C7E7";
+                        const isLeave = cell.s?.fgColor?.rgb === "B4C7E7";
 
-                          if (!isLeave) {
-                            const duty = depts[dept]["" + day]?.duty;
-                            if (duty) {
-                              duty.push(person);
-                            }
+                        if (!isLeave) {
+                          const duty = depts[dept]["" + day]?.duty;
+                          if (duty) {
+                            duty.push(person);
                           }
-                          if (cell.v) {
-                            day++;
-                            continue;
-                          }
+                        }
+                        if (cell.v) {
+                          day++;
+                          continue;
                         }
                       }
                     });
                 }
               }
             });
-
-            /*
-            const workingDays = days.split(",");
-
-            for (let day = 1; day <= columns.split(",").length; day++) {
-              const column = columns.split(",")[day - 1];
-              const id = `${column}${row}`;
-              const cell = workSheet[id];
-              const person = workSheet[`C${row}`].v;
-
-              if (!pgys[person] && isPGY) pgys[person] = 0;
-
-              if (workingDays.includes["" + day] === false) {
-                continue;
-              }
-
-              if (!cell) {
-                missing.push(id);
-                continue;
-              }
-
-              let dept = null;
-
-              if (day <= 15 && depts[halfDepts[0]]) {
-                dept = halfDepts[0];
-              } else if (day > 15 && depts[halfDepts[1]]) {
-                dept = halfDepts[1];
-              } else continue;
-
-              if (dept) {
-                const isLeave = cell.s?.fgColor?.rgb === "B4C7E7";
-
-                if (!isLeave) {
-                  const duty = depts[dept]["" + day]?.duty;
-                  if (duty) {
-                    duty.push(person);
-                  }
-                }
-                if (cell.v) {
-                  day++;
-                  continue;
-                }
-              }
-            }
-            */
           }
           startRow = row + 1;
         }
@@ -164,19 +119,18 @@ export function Schedule() {
       if (!selected) setSelected(dept);
       setReady(true);
     }
-  }, [workbook]);
+  }, [resource]);
 
-  console.log(">>>>")
   return (
     <BlockStack gap="300">
       <Card>
-        <ReadFile title="讀取班表" setWork={setWork} sheet={sheet} />
+        <ReadFile title="讀取班表" setWorkbook={setWorkbook} sheet={nightShift} />
       </Card>
 
       {ready && (
         <Card>
           <Select
-            label="值班人力"
+            label="值班人力（扣除前一天值夜）"
             options={Object.keys(departments).map((key) => ({
               label: key,
               value: key,

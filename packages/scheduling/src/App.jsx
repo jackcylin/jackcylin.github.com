@@ -5,7 +5,8 @@ import { AppProvider, Page, Tabs } from "@shopify/polaris";
 import { GlobalProvider } from "./hooks/GlobalProvider";
 import { createRoot } from "react-dom/client";
 import { Inputs } from "./Inputs";
-import { Schedule } from "./Schedule";
+import { Resource } from "./Resource";
+import { Clinic } from "./Clinic";
 
 const root = createRoot(document.getElementById("root"));
 root.render(<App />);
@@ -29,13 +30,13 @@ function App() {
       id: "2",
       content: "班表",
       accessibilityLabel: "班表",
-      component: Schedule,
+      component: Resource,
     },
     {
       id: "3",
       content: "教學門診",
       accessibilityLabel: "教學門診",
-      component: C3,
+      component: Clinic,
     },
   ];
   const Comp = tabs[selected].component;
@@ -51,12 +52,4 @@ function App() {
       </GlobalProvider>
     </AppProvider>
   );
-}
-
-function C2() {
-  return <div>C2</div>;
-}
-
-function C3() {
-  return <div>C3</div>;
 }
