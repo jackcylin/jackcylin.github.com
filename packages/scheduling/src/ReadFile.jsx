@@ -1,40 +1,9 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import "@shopify/polaris/build/esm/styles.css";
-import {
-  DropZone,
-  BlockStack,
-  InlineError,
-  InlineStack,
-  Card,
-} from "@shopify/polaris";
+import { DropZone, BlockStack, InlineError } from "@shopify/polaris";
 import XLSX from "xlsx-js-style";
-import { useGlobal } from "./hooks/useGlobal";
 
-export function Upload() {
-  const { setWorkbook, sheet } = useGlobal();
-  const [work, setWork] = useState();
-  const [clinic, setClinic] = useState();
-
-  useEffect(() => {
-    if (work) setWorkbook(work);
-    else setWorkbook();
-  }, [work]);
-
-  return (
-    <Card>
-      <InlineStack align="start" gap="300">
-        <LoadWorkCalender title="讀取班表" setWork={setWork} sheet={sheet} />
-        <LoadWorkCalender
-          title="讀取教學門診表"
-          setWork={setClinic}
-          sheet={"七月"}
-        />
-      </InlineStack>
-    </Card>
-  );
-}
-
-export function LoadWorkCalender({ title, setWork, sheet }) {
+export function ReadFile({ title, setWork, sheet }) {
   const [files, setFiles] = useState([]);
   const [error, setError] = useState();
 
