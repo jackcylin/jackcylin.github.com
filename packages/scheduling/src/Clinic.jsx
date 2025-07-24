@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { BlockStack, Card, IndexTable, TextField } from "@shopify/polaris";
+import {
+  BlockStack,
+  Card,
+  IndexTable,
+  TextField,
+  Icon,
+} from "@shopify/polaris";
 import { useGlobal } from "./hooks/useGlobal";
 import { ReadFile } from "./ReadFile";
+import { XIcon, PlusIcon } from "@shopify/polaris-icons";
 
 const MONTHS = {
   1: "一月",
@@ -22,7 +29,7 @@ export function Clinic() {
   const [ready, setReady] = useState(false);
   const { clinic, setClinic, month } = useGlobal();
   const [workbook, setWorkbook] = useState();
-  const [clinics, setClinics] = useState([]);
+  const [clinics, setClinics] = useState({});
 
   useEffect(() => {
     if (workbook) setClinic(workbook);
@@ -41,13 +48,16 @@ export function Clinic() {
             /(\D+)(\d+)/.test(i) && sheet[i].v && /\(\s*\)/.test(sheet[i].v)
         )
       );
-      const items = [];
+      const items = {};
       res.forEach((i) => {
         const lines = sheet[i].v.split(/\r?\n/);
         lines
           .filter((line) => /\(\s*\)/.test(line))
           .forEach((line) => {
-            items.push(line.split(/\(\s*\)/[1])[0]);
+            items[Object.keys(items).length + 1] = {
+              day: Object.keys(items).length + 1,
+              detail: line.split(/\(\s*\)/[1])[0],
+            };
           });
       });
       setClinics(items);
@@ -66,25 +76,80 @@ export function Clinic() {
 
       <Card>
         <IndexTable
-          itemCount={clinics.length}
+          itemCount={Object.keys(clinics).length}
           selectable={false}
           headings={[{ title: "日期" }, { title: "門診" }]}
         >
-          {clinics.map((item, index) => {
-            return (
-              <IndexTable.Row key={index}>
-                <IndexTable.Cell>
-                  <div style={{ width: 16 }}>
-                    <TextField type="number" value={0} placeholder="1 ~ 31" />
-                  </div>
-                </IndexTable.Cell>
-                <IndexTable.Cell>{item}</IndexTable.Cell>
-              </IndexTable.Row>
-            );
-          })}
+          {Object.keys(clinics).map((key) => (
+            <Row
+              key={key}
+              id={key}
+              clinic={clinics[key]}
+              onChange={(changes) => {
+                const clone = {
+                  ...clinics,
+                  [key]: { ...clinics[key], ...changes },
+                };
+                setClinics(clone);
+              }}
+              onDelete={(deleteKey) => {
+                const clone = { ...clinics };
+                delete clone[deleteKey];
+                setClinics(clone);
+              }}
+            />
+          ))}
+          <IndexTable.Row>
+            <IndexTable.Cell>
+              <div
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  const newKey = Object.keys(clinics)
+                    .map((key) => parseInt(key))
+                    .reduce((acc, cur) => (acc = cur + 1), 1);
+                  setClinics({ ...clinics, [newKey]: { day: 1, detail: "" } });
+                }}
+              >
+                <Icon source={PlusIcon} tone="base" />
+              </div>
+            </IndexTable.Cell>
+          </IndexTable.Row>
         </IndexTable>
       </Card>
     </BlockStack>
+  );
+}
+
+function Row({ id, clinic, onChange, onDelete }) {
+  return (
+    <IndexTable.Row>
+      <IndexTable.Cell>
+        <TextField
+          type="number"
+          value={clinic.day}
+          placeholder="1 ~ 12"
+          onChange={(value) => {
+            let target = value > 31 ? 31 : value < 1 ? 1 : value;
+            onChange({ day: target });
+          }}
+          autoComplete="off"
+        />
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <TextField
+          value={clinic.detail}
+          onChange={(value) => {
+            onChange({ detail: value });
+          }}
+          autoComplete="off"
+        />
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <div style={{ cursor: "pointer" }} onClick={() => onDelete(id)}>
+          <Icon source={XIcon} tone="base" />
+        </div>
+      </IndexTable.Cell>
+    </IndexTable.Row>
   );
 }
 
