@@ -33,8 +33,9 @@ export function GlobalProvider({ children }) {
       )
       .join(",")
   );
-  const [resource, setResource] = useState();
-  const [clinic, setClinic] = useState();
+  const [pgys, setPgys] = useState({});
+  const [departments, setDepartments] = useState();
+  const [clinics, setClinics] = useState({});
 
   useEffect(() => {
     const ins = {
@@ -59,25 +60,27 @@ export function GlobalProvider({ children }) {
   return (
     <GlobalContext.Provider
       value={{
-        includes,
+        includes, // 納入值班人力群組(PGY,R1,R2,R3)
         setIncludes,
-        excludes,
+        excludes, // 排除科別(外訓,特休,休假)
         setExcludes,
-        plans,
+        plans, // 納入教學門診排班群組(PGY,R1)
         setPlans,
         year,
         setYear,
         month,
         setMonth,
-        days,
+        days, // 工作日(1,2,3...)
         setDays,
-        nightShift,
+        nightShift, // 表格 "夜班值班表"
         columns,
-        resource,
-        setResource,
-        clinic,
-        setClinic,
         updateStorage,
+        pgys, // 教學門診排班人員, "姓名": 次數
+        setPgys,
+        departments,
+        setDepartments,
+        clinics,
+        setClinics,
       }}
     >
       {children}

@@ -10,7 +10,6 @@ export function ReadFile({ title, setWorkbook, sheet }) {
   const handleDropZoneDrop = useCallback((_dropFiles, acceptedFiles) => {
     setFiles(() => {
       const xls = acceptedFiles[0];
-
       const reader = new FileReader();
       reader.readAsArrayBuffer(xls);
       reader.onload = () => {
@@ -57,7 +56,7 @@ export function ReadFile({ title, setWorkbook, sheet }) {
         </DropZone>
       </div>
 
-      {error ? <InlineError message={error} /> : null}
+      {error && <InlineError message={error} />}
     </BlockStack>
   );
 }

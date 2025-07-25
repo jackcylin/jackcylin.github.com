@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   BlockStack,
   Card,
   IndexTable,
   TextField,
   Icon,
+  Button,
+  InlineError,
 } from "@shopify/polaris";
 import { useGlobal } from "./hooks/useGlobal";
 import { ReadFile } from "./ReadFile";
@@ -26,22 +28,15 @@ const MONTHS = {
 };
 
 export function Clinic() {
-  const [ready, setReady] = useState(false);
-  const { clinic, setClinic, month } = useGlobal();
+  const { month, clinics, setClinics, pgys, setPgys, departments } =
+    useGlobal();
   const [workbook, setWorkbook] = useState();
-  const [clinics, setClinics] = useState({});
+  const [error, setError] = useState();
+  const [planned, setPlanned] = useState(false);
 
   useEffect(() => {
-    if (workbook) setClinic(workbook);
-    else {
-      setClinic();
-      setReady(false);
-    }
-  }, [workbook]);
-
-  useEffect(() => {
-    if (clinic) {
-      const sheet = clinic.Sheets[MONTHS[month]];
+    if (workbook) {
+      const sheet = workbook.Sheets[MONTHS[month]];
       const res = sort(
         Object.keys(sheet).filter(
           (i) =>
@@ -57,12 +52,54 @@ export function Clinic() {
             items[Object.keys(items).length + 1] = {
               day: Object.keys(items).length + 1,
               detail: line.split(/\(\s*\)/[1])[0],
+              attendee: [],
             };
           });
       });
       setClinics(items);
     }
-  }, [clinic]);
+  }, [workbook]);
+
+  const plan = useCallback(() => {
+    if (!pgys || !departments) setError("沒有排班資料");
+
+    const allClinics = { ...clinics };
+
+    console.log("planning ...");
+
+    for (const person of Object.keys(pgys))
+      pgys[person] = { count: 0, available: [] };
+
+    for (const clinic of Object.keys(allClinics))
+      allClinics[clinic].attendee = [];
+
+    for (const person of Object.keys(pgys)) {
+      if (pgys[person].count > 0) continue;
+
+      for (const clinic of Object.keys(allClinics)) {
+        const item = allClinics[clinic];
+        const day = item.day;
+
+        for (const department of Object.keys(departments)) {
+          const dept = departments[department];
+          if (
+            dept[day]?.duty?.length > 1 &&
+            dept[day].duty.includes(person) &&
+            !item.attendee.includes[person] &&
+            item.attendee.length < 1
+          ) {
+            item.attendee.push(person);
+            pgys[person].count++;
+            break;
+          }
+        }
+        if (pgys[person] > 0) break;
+      }
+    }
+    setClinics(allClinics);
+    setPgys(pgys);
+    setPlanned(true);
+  }, [departments, pgys, clinics]);
 
   return (
     <BlockStack gap="300">
@@ -74,48 +111,97 @@ export function Clinic() {
         />
       </Card>
 
-      <Card>
-        <IndexTable
-          itemCount={Object.keys(clinics).length}
-          selectable={false}
-          headings={[{ title: "日期" }, { title: "門診" }]}
-        >
-          {Object.keys(clinics).map((key) => (
-            <Row
-              key={key}
-              id={key}
-              clinic={clinics[key]}
-              onChange={(changes) => {
-                const clone = {
-                  ...clinics,
-                  [key]: { ...clinics[key], ...changes },
-                };
-                setClinics(clone);
-              }}
-              onDelete={(deleteKey) => {
-                const clone = { ...clinics };
-                delete clone[deleteKey];
-                setClinics(clone);
-              }}
-            />
-          ))}
-          <IndexTable.Row>
-            <IndexTable.Cell>
-              <div
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  const newKey = Object.keys(clinics)
-                    .map((key) => parseInt(key))
-                    .reduce((acc, cur) => (acc = cur + 1), 1);
-                  setClinics({ ...clinics, [newKey]: { day: 1, detail: "" } });
-                }}
-              >
-                <Icon source={PlusIcon} tone="base" />
-              </div>
-            </IndexTable.Cell>
-          </IndexTable.Row>
-        </IndexTable>
-      </Card>
+      {Object.keys(clinics).length > 0 ? (
+        <>
+          <Card>
+            <Button variant="primary" onClick={plan}>
+              排班
+            </Button>
+            {error && <InlineError message={error} />}
+          </Card>
+
+          <Card>
+            <IndexTable
+              itemCount={Object.keys(clinics).length}
+              selectable={false}
+              headings={[{ title: "日期" }, { title: "門診" }]}
+            >
+              {Object.keys(clinics).map((key) => (
+                <Row
+                  key={key}
+                  id={key}
+                  clinic={clinics[key]}
+                  onChange={(changes) => {
+                    const clone = {
+                      ...clinics,
+                      [key]: { ...clinics[key], ...changes },
+                    };
+                    setClinics(clone);
+                  }}
+                  onDelete={(deleteKey) => {
+                    const clone = { ...clinics };
+                    delete clone[deleteKey];
+                    setClinics(clone);
+                  }}
+                />
+              ))}
+              <IndexTable.Row>
+                <IndexTable.Cell>
+                  <div
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      const newKey = Object.keys(clinics)
+                        .map((key) => parseInt(key))
+                        .reduce((acc, cur) => (acc = cur + 1), 1);
+                      setClinics({
+                        ...clinics,
+                        [newKey]: { day: 1, detail: "" },
+                      });
+                    }}
+                  >
+                    <Icon source={PlusIcon} tone="base" />
+                  </div>
+                </IndexTable.Cell>
+              </IndexTable.Row>
+            </IndexTable>
+          </Card>
+        </>
+      ) : null}
+
+      {planned ? (
+        <Card>
+          <IndexTable
+            itemCount={Object.keys(pgys).length}
+            selectable={false}
+            headings={[{ title: "人員" }, { title: "排班數" }]}
+          >
+            {Object.keys(pgys).map((person) => (
+              <IndexTable.Row key={person}>
+                <IndexTable.Cell>{person}</IndexTable.Cell>
+                <IndexTable.Cell>{pgys[person].count}</IndexTable.Cell>
+              </IndexTable.Row>
+            ))}
+            <IndexTable.Row>
+              <IndexTable.Cell>
+                <div
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    const newKey = Object.keys(clinics)
+                      .map((key) => parseInt(key))
+                      .reduce((acc, cur) => (acc = cur + 1), 1);
+                    setClinics({
+                      ...clinics,
+                      [newKey]: { day: 1, detail: "" },
+                    });
+                  }}
+                >
+                  <Icon source={PlusIcon} tone="base" />
+                </div>
+              </IndexTable.Cell>
+            </IndexTable.Row>
+          </IndexTable>
+        </Card>
+      ) : null}
     </BlockStack>
   );
 }
@@ -143,6 +229,9 @@ function Row({ id, clinic, onChange, onDelete }) {
           }}
           autoComplete="off"
         />
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <div>{clinic.attendee.reduce((acc, cur) => acc + cur, "")}</div>
       </IndexTable.Cell>
       <IndexTable.Cell>
         <div style={{ cursor: "pointer" }} onClick={() => onDelete(id)}>

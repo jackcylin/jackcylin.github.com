@@ -4,37 +4,30 @@ import { useGlobal } from "./hooks/useGlobal";
 import { ReadFile } from "./ReadFile";
 
 export function Resource() {
-  const [departments, setDepartments] = useState({});
-  const [selected, setSelected] = useState("");
-  const [ready, setReady] = useState(false);
+  const [selectDept, setSelectDept] = useState("");
+
   const {
-    resource,
-    setResource,
     nightShift,
     includes,
     plans,
     excludes,
     columns,
     days,
+    pgys,
+    setPgys,
+    departments,
+    setDepartments,
   } = useGlobal();
   const [workbook, setWorkbook] = useState();
 
   useEffect(() => {
-    if (workbook) setResource(workbook);
-    else {
-      setResource();
-      setReady(false)
-    }
-  }, [workbook]);
+    if (workbook) {
+      let startRow = 1;
+      const depts = {};
+      let personnel = {};
+      const missing = [];
 
-  useEffect(() => {
-    let startRow = 1;
-    const depts = {};
-    let pgys = {};
-    const missing = [];
-
-    if (resource) {
-      const workSheet = resource.Sheets[nightShift];
+      const workSheet = workbook.Sheets[nightShift];
 
       includes.split(",").forEach((group) => {
         let groupingState = null,
@@ -76,16 +69,15 @@ export function Resource() {
                         endDay = deptColumn === "A" ? 15 : 31;
 
                       for (let day = startDay; day <= endDay; day++) {
+                        if (!workingDays.includes("" + day)) continue;
+
                         const column = columns.split(",")[day - 1];
                         const id = `${column}${row}`;
                         const cell = workSheet[id];
                         const person = workSheet[`C${row}`].v;
 
-                        if (!pgys[person] && isPGY) pgys[person] = 0;
-
-                        if (workingDays.includes["" + day] === false) {
-                          continue;
-                        }
+                        if (!personnel[person] && isPGY)
+                          personnel[person] = { count: 0, available: [] };
 
                         if (!cell) {
                           missing.push(id);
@@ -95,11 +87,13 @@ export function Resource() {
                         const isLeave = cell.s?.fgColor?.rgb === "B4C7E7";
 
                         if (!isLeave) {
-                          const duty = depts[dept]["" + day]?.duty;
-                          if (duty) {
-                            duty.push(person);
-                          }
+                          depts[dept][day].duty.push(person);
+                          if (personnel[person])
+                            personnel[person].available.push(day);
+                        } else {
+                          console.log(person, day);
                         }
+
                         if (cell.v) {
                           day++;
                           continue;
@@ -116,33 +110,61 @@ export function Resource() {
 
       setDepartments(depts);
       const dept = Object.keys(depts)[0];
-      if (!selected) setSelected(dept);
-      setReady(true);
+      if (!selectDept) setSelectDept(dept);
+      setPgys(personnel);
     }
-  }, [resource]);
+  }, [workbook]);
 
+  useEffect(() => {
+    if (departments && !selectDept) setSelectDept(Object.keys(departments)[0]);
+  }, [departments]);
+
+  console.log(departments, pgys);
   return (
     <BlockStack gap="300">
       <Card>
-        <ReadFile title="讀取班表" setWorkbook={setWorkbook} sheet={nightShift} />
+        <ReadFile
+          title="讀取班表"
+          setWorkbook={setWorkbook}
+          sheet={nightShift}
+        />
       </Card>
 
-      {ready && (
+      {Object.keys(pgys).length ? (
+        <Card>
+          <IndexTable
+            itemCount={Object.keys(pgys).length}
+            selectable={false}
+            headings={[{ title: "姓名" }, { title: "可值班日期" }]}
+          >
+            {Object.keys(pgys).map((person) => (
+              <IndexTable.Row key={person}>
+                <IndexTable.Cell>{person}</IndexTable.Cell>
+                <IndexTable.Cell>
+                  {pgys[person].available.join(", ")}
+                </IndexTable.Cell>
+              </IndexTable.Row>
+            ))}
+          </IndexTable>
+        </Card>
+      ) : null}
+
+      {departments && (
         <Card>
           <Select
-            label="值班人力（扣除前一天值夜）"
+            label="各科值班人力（扣除前一天值夜）"
             options={Object.keys(departments).map((key) => ({
               label: key,
               value: key,
             }))}
-            onChange={(value) => setSelected(value)}
-            value={selected}
+            onChange={(value) => setSelectDept(value)}
+            value={selectDept}
           />
 
           <IndexTable
             itemCount={
-              departments[selected]
-                ? Object.keys(departments[selected])?.length
+              departments[selectDept]
+                ? Object.keys(departments[selectDept])?.length
                 : 0
             }
             selectable={false}
@@ -155,9 +177,9 @@ export function Resource() {
               { title: "　　　　" },
             ]}
           >
-            {selected &&
-              Object.keys(departments[selected]).map((day) => {
-                const duty = departments[selected][day].duty;
+            {selectDept &&
+              Object.keys(departments[selectDept]).map((day) => {
+                const duty = departments[selectDept][day].duty;
                 return (
                   <IndexTable.Row key={day}>
                     <IndexTable.Cell>{day}</IndexTable.Cell>
