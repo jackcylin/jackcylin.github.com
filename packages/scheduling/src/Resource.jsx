@@ -90,8 +90,6 @@ export function Resource() {
                           depts[dept][day].duty.push(person);
                           if (personnel[person])
                             personnel[person].available.push(day);
-                        } else {
-                          console.log(person, day);
                         }
 
                         if (cell.v) {
@@ -119,7 +117,6 @@ export function Resource() {
     if (departments && !selectDept) setSelectDept(Object.keys(departments)[0]);
   }, [departments]);
 
-  console.log(departments, pgys);
   return (
     <BlockStack gap="300">
       <Card>

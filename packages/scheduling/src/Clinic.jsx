@@ -6,6 +6,7 @@ import {
   TextField,
   Icon,
   Button,
+  InlineStack,
   InlineError,
 } from "@shopify/polaris";
 import { useGlobal } from "./hooks/useGlobal";
@@ -33,6 +34,8 @@ export function Clinic() {
   const [workbook, setWorkbook] = useState();
   const [error, setError] = useState();
   const [planned, setPlanned] = useState(false);
+  const [maxAttendee, setMaxAttendee] = useState(1);
+  const [maxClinic, setMaxClinic] = useState(1);
 
   useEffect(() => {
     if (workbook) {
@@ -57,49 +60,26 @@ export function Clinic() {
           });
       });
       setClinics(items);
+      console.log("clinics: ", items);
     }
   }, [workbook]);
 
   const plan = useCallback(() => {
     if (!pgys || !departments) setError("沒有排班資料");
 
-    const allClinics = { ...clinics };
-
-    console.log("planning ...");
-
-    for (const person of Object.keys(pgys))
-      pgys[person] = { count: 0, available: [] };
-
-    for (const clinic of Object.keys(allClinics))
-      allClinics[clinic].attendee = [];
-
-    for (const person of Object.keys(pgys)) {
-      if (pgys[person].count > 0) continue;
-
-      for (const clinic of Object.keys(allClinics)) {
-        const item = allClinics[clinic];
-        const day = item.day;
-
-        for (const department of Object.keys(departments)) {
-          const dept = departments[department];
-          if (
-            dept[day]?.duty?.length > 1 &&
-            dept[day].duty.includes(person) &&
-            !item.attendee.includes[person] &&
-            item.attendee.length < 1
-          ) {
-            item.attendee.push(person);
-            pgys[person].count++;
-            break;
-          }
-        }
-        if (pgys[person] > 0) break;
-      }
-    }
-    setClinics(allClinics);
+    createSchedule(pgys, clinics, maxAttendee, maxClinic);
+    setClinics(clinics);
     setPgys(pgys);
     setPlanned(true);
-  }, [departments, pgys, clinics]);
+  }, [departments, pgys, clinics, maxAttendee, maxClinic]);
+
+  const clear = useCallback(() => {
+    for (const clinic of Object.keys(clinics)) clinics[clinic].attendee = [];
+    for (const person of Object.keys(pgys)) pgys[person].count = 0;
+    setClinics(clinics);
+    setPgys(pgys);
+    setPlanned(false);
+  }, [clinics]);
 
   return (
     <BlockStack gap="300">
@@ -114,10 +94,35 @@ export function Clinic() {
       {Object.keys(clinics).length > 0 ? (
         <>
           <Card>
-            <Button variant="primary" onClick={plan}>
-              排班
-            </Button>
-            {error && <InlineError message={error} />}
+            <BlockStack gap="300">
+              <TextField
+                label="門診最多可排人數"
+                type="number"
+                value={maxAttendee}
+                onChange={(value) => {
+                  setMaxAttendee(value);
+                }}
+                autoComplete="off"
+              />
+
+              <TextField
+                label="每人最多可排門診數"
+                type="number"
+                value={maxClinic}
+                onChange={(value) => {
+                  setMaxClinic(value);
+                }}
+                autoComplete="off"
+              />
+
+              <InlineStack gap="300">
+                <Button variant="primary" onClick={plan}>
+                  排班
+                </Button>
+                <Button onClick={clear}>清除</Button>
+              </InlineStack>
+              {error && <InlineError message={error} />}
+            </BlockStack>
           </Card>
 
           <Card>
@@ -155,7 +160,7 @@ export function Clinic() {
                         .reduce((acc, cur) => (acc = cur + 1), 1);
                       setClinics({
                         ...clinics,
-                        [newKey]: { day: 1, detail: "" },
+                        [newKey]: { day: 1, detail: "", attendee: [] },
                       });
                     }}
                   >
@@ -173,11 +178,18 @@ export function Clinic() {
           <IndexTable
             itemCount={Object.keys(pgys).length}
             selectable={false}
-            headings={[{ title: "人員" }, { title: "排班數" }]}
+            headings={[
+              { title: "人員" },
+              { title: "可排門診日期" },
+              { title: "已排門診次數" },
+            ]}
           >
             {Object.keys(pgys).map((person) => (
               <IndexTable.Row key={person}>
                 <IndexTable.Cell>{person}</IndexTable.Cell>
+                <IndexTable.Cell>
+                  {pgys[person].available.join(", ")}
+                </IndexTable.Cell>
                 <IndexTable.Cell>{pgys[person].count}</IndexTable.Cell>
               </IndexTable.Row>
             ))}
@@ -231,7 +243,7 @@ function Row({ id, clinic, onChange, onDelete }) {
         />
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <div>{clinic.attendee.reduce((acc, cur) => acc + cur, "")}</div>
+        <div>{clinic.attendee.join(", ")}</div>
       </IndexTable.Cell>
       <IndexTable.Cell>
         <div style={{ cursor: "pointer" }} onClick={() => onDelete(id)}>
@@ -260,4 +272,34 @@ function sort(source) {
     if (at < bt) return -1;
     return 0;
   });
+}
+
+function createSchedule(interns, clinics, maxAttendee, maxClinic) {
+  // Loop through each clinic to staff it
+  for (const clinic of Object.keys(clinics)) {
+    // Find interns who are available on this clinic's day AND have less than 2 assignments
+    let candidates = Object.keys(interns).filter(
+      (intern) =>
+        interns[intern].available.includes(clinics[clinic].day) &&
+        interns[intern].count < maxClinic
+    );
+
+    // Prioritize fairness: sort candidates by who has fewer assignments
+    candidates.sort((a, b) => interns[a].count - interns[b].count);
+
+    // Assign the best candidates until the clinic is full
+    while (
+      clinics[clinic].attendee.length < maxAttendee &&
+      candidates.length > 0
+    ) {
+      // Take the highest-priority candidate (the first one in the sorted list)
+      const internToAssign = candidates.shift();
+      // Assign them to the clinic
+      clinics[clinic].attendee.push(internToAssign);
+      // Update their assignment count
+      interns[internToAssign].count++;
+    }
+  }
+
+  return { clinics, interns };
 }
