@@ -193,24 +193,6 @@ export function Clinic() {
                 <IndexTable.Cell>{pgys[person].count}</IndexTable.Cell>
               </IndexTable.Row>
             ))}
-            <IndexTable.Row>
-              <IndexTable.Cell>
-                <div
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    const newKey = Object.keys(clinics)
-                      .map((key) => parseInt(key))
-                      .reduce((acc, cur) => (acc = cur + 1), 1);
-                    setClinics({
-                      ...clinics,
-                      [newKey]: { day: 1, detail: "" },
-                    });
-                  }}
-                >
-                  <Icon source={PlusIcon} tone="base" />
-                </div>
-              </IndexTable.Cell>
-            </IndexTable.Row>
           </IndexTable>
         </Card>
       ) : null}
