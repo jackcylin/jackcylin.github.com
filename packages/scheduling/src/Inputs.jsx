@@ -14,8 +14,6 @@ export function Inputs() {
     setYear,
     month,
     setMonth,
-    days,
-    setDays,
     columns,
     updateStorage,
   } = useGlobal();
@@ -48,7 +46,7 @@ export function Inputs() {
         />
       </InlineStack>
 
-      <InlineStack gap="300" align="space-between" wrap={false}>
+      {/* <InlineStack gap="300" align="space-between" wrap={false}>
         <div style={{ width: "100%" }}>
           <TextField
             label="工作日(英文逗號,間隔)"
@@ -68,25 +66,20 @@ export function Inputs() {
 
         <Button
           onClick={() => {
-            const DAYS = new Date(year, month, 0).getDate();
-            const WEEK_DAYS = [...Array(DAYS).keys()]
-              .map((i) => i + 1)
-              .filter((d) => {
-                const day = new Date(year, month - 1, d, 8).getDay();
-                return day === 6 || day === 0 ? false : true;
-              })
-              .join(",");
-            setDays(WEEK_DAYS);
-            // .reduce((acc, cur) => {
-            //   acc[cur] = { duty: [] };
-            //   return acc;
-            // }, {});
-            // return WEEK_DAYS.join(",")
+            setDays(() =>
+              [...Array(new Date(year, month, 0).getDate()).keys()]
+                .map((i) => i + 1)
+                // .filter((d) => {
+                //   const day = new Date(year, month - 1, d, 8).getDay();
+                //   return day === 6 || day === 0 ? false : true;
+                // })
+                .join(",")
+            );
           }}
         >
           依日曆計算工作日
         </Button>
-      </InlineStack>
+      </InlineStack> */}
 
       <TextField
         label="Sheet"

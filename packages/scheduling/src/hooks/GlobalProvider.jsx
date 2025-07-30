@@ -47,9 +47,17 @@ export function GlobalProvider({ children }) {
     setIncludes(ins.includes);
     setExcludes(ins.excludes);
     setPlans(ins.plans);
-    setDays(ins.days);
     setInputs(ins);
   }, []);
+
+  useEffect(() => {
+    if (year && month)
+      setDays(
+        [...Array(new Date(year, month, 0).getDate()).keys()]
+          .map((i) => i + 1)
+          .join(",")
+      );
+  }, [year, month]);
 
   const updateStorage = (changes) => {
     const updated = { ...inputs, ...changes };
@@ -71,7 +79,6 @@ export function GlobalProvider({ children }) {
         month,
         setMonth,
         days, // 工作日(1,2,3...)
-        setDays,
         nightShift, // 表格 "夜班值班表"
         columns,
         updateStorage,

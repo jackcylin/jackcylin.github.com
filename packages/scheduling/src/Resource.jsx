@@ -29,6 +29,8 @@ export function Resource() {
 
       const workSheet = workbook.Sheets[nightShift];
 
+      console.log("parsing ...");
+      
       includes.split(",").forEach((group) => {
         let groupingState = null,
           isPGY = false;
