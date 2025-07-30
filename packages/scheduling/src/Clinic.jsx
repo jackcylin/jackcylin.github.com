@@ -60,7 +60,6 @@ export function Clinic() {
           });
       });
       setClinics(items);
-      console.log("clinics: ", items);
     }
   }, [workbook]);
 
@@ -207,10 +206,8 @@ function Row({ id, clinic, onChange, onDelete }) {
         <TextField
           type="number"
           value={clinic.day}
-          placeholder="1 ~ 12"
           onChange={(value) => {
-            let target = value > 31 ? 31 : value < 1 ? 1 : value;
-            onChange({ day: target });
+            onChange({ day: parseInt(value) });
           }}
           autoComplete="off"
         />
