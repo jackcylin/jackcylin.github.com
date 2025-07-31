@@ -88,7 +88,6 @@ export function Clinic() {
     setPlanned(false);
   }, [clinics]);
 
-
   return (
     <BlockStack gap="300">
       <Card>
@@ -268,17 +267,10 @@ function createSchedule(departments, interns, clinics, maxAttendee, maxClinic) {
     // Find interns who are available on this clinic's day AND have less than 2 assignments
     let candidates = Object.keys(interns).filter((intern) => {
       const clinicDay = clinics[clinic].day;
-      const depts = Object.keys(departments).filter(
-        (dept) =>
-          departments[dept][clinicDay] &&
-          departments[dept][clinicDay].duty.includes(intern) &&
-          departments[dept][clinicDay].duty.length > 1
-      );
 
       return (
         interns[intern].available.includes(clinicDay) &&
-        interns[intern].count < maxClinic &&
-        depts.length
+        interns[intern].count < maxClinic
       );
       // departments[clinics[clinic].day].duty.includes(intern) &&
     });

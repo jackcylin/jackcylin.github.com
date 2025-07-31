@@ -30,7 +30,7 @@ export function Resource() {
       const workSheet = workbook.Sheets[nightShift];
 
       console.log("parsing ...");
-      
+
       includes.split(",").forEach((group) => {
         let groupingState = null,
           isPGY = false;
@@ -111,6 +111,35 @@ export function Resource() {
       setDepartments(depts);
       const dept = Object.keys(depts)[0];
       if (!selectDept) setSelectDept(dept);
+
+      // deduct only one on duty
+      Object.keys(depts).forEach((d) =>
+        Object.keys(depts[d]).forEach((day) => {
+          if (depts[d][day].duty.length === 1) {
+            const onDuty = depts[d][day].duty[0];
+            const nDay = parseInt(day);
+
+            if (
+              personnel[onDuty] &&
+              personnel[onDuty].available &&
+              personnel[onDuty].available.indexOf(nDay) >= 0
+            ) {
+              const position = personnel[onDuty].available.indexOf(nDay);
+              personnel[onDuty].available = personnel[onDuty].available.splice(
+                position,
+                position
+              );
+            }
+          }
+        })
+      );
+
+      //   (dept) =>
+      //     departments[dept][clinicDay] &&
+      //     departments[dept][clinicDay].duty.includes(intern) &&
+      //     departments[dept][clinicDay].duty.length > 1
+      // );
+
       setPgys(personnel);
     }
   }, [workbook]);
@@ -118,6 +147,8 @@ export function Resource() {
   useEffect(() => {
     if (departments && !selectDept) setSelectDept(Object.keys(departments)[0]);
   }, [departments]);
+
+  console.log(pgys, departments);
 
   return (
     <BlockStack gap="300">
