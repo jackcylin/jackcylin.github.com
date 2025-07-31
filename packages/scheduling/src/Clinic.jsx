@@ -63,10 +63,18 @@ export function Clinic() {
     }
   }, [workbook]);
 
+  useEffect(() => {
+    const clone = JSON.parse(JSON.stringify(clinics));
+    Object.keys(clone).forEach((item) => {
+      clone[item].attendee = [];
+    });
+    localStorage.setItem("clinics", JSON.stringify(clone));
+  }, [clinics]);
+
   const plan = useCallback(() => {
     if (!pgys || !departments) setError("沒有排班資料");
 
-    createSchedule(pgys, clinics, maxAttendee, maxClinic);
+    createSchedule(departments, pgys, clinics, maxAttendee, maxClinic);
     setClinics(clinics);
     setPgys(pgys);
     setPlanned(true);
@@ -79,6 +87,7 @@ export function Clinic() {
     setPgys(pgys);
     setPlanned(false);
   }, [clinics]);
+
 
   return (
     <BlockStack gap="300">
@@ -253,15 +262,26 @@ function sort(source) {
   });
 }
 
-function createSchedule(interns, clinics, maxAttendee, maxClinic) {
+function createSchedule(departments, interns, clinics, maxAttendee, maxClinic) {
   // Loop through each clinic to staff it
   for (const clinic of Object.keys(clinics)) {
     // Find interns who are available on this clinic's day AND have less than 2 assignments
-    let candidates = Object.keys(interns).filter(
-      (intern) =>
-        interns[intern].available.includes(clinics[clinic].day) &&
-        interns[intern].count < maxClinic
-    );
+    let candidates = Object.keys(interns).filter((intern) => {
+      const clinicDay = clinics[clinic].day;
+      const depts = Object.keys(departments).filter(
+        (dept) =>
+          departments[dept][clinicDay] &&
+          departments[dept][clinicDay].duty.includes(intern) &&
+          departments[dept][clinicDay].duty.length > 1
+      );
+
+      return (
+        interns[intern].available.includes(clinicDay) &&
+        interns[intern].count < maxClinic &&
+        depts.length
+      );
+      // departments[clinics[clinic].day].duty.includes(intern) &&
+    });
 
     // Prioritize fairness: sort candidates by who has fewer assignments
     candidates.sort((a, b) => interns[a].count - interns[b].count);

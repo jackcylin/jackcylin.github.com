@@ -35,7 +35,7 @@ export function GlobalProvider({ children }) {
   );
   const [pgys, setPgys] = useState({});
   const [departments, setDepartments] = useState();
-  const [clinics, setClinics] = useState({});
+  const [clinics, setClinics] = useState();
 
   useEffect(() => {
     const ins = {
@@ -48,6 +48,8 @@ export function GlobalProvider({ children }) {
     setExcludes(ins.excludes);
     setPlans(ins.plans);
     setInputs(ins);
+
+    setClinics(JSON.parse(localStorage.getItem("clinics") || "{}"));
   }, []);
 
   useEffect(() => {
