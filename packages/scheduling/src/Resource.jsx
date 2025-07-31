@@ -49,6 +49,8 @@ export function Resource() {
 
             let halfDepts = [null, null];
 
+            let skipNightShift = 0;
+
             ["A", "B"].forEach((deptColumn, index) => {
               const id = `${deptColumn}${row}`;
               const cell = workSheet[id];
@@ -67,8 +69,14 @@ export function Resource() {
                       }
                       const workingDays = days.split(",");
 
-                      const startDay = deptColumn === "A" ? 1 : 16,
-                        endDay = deptColumn === "A" ? 15 : 31;
+                      let startDay = 1,
+                        endDay = 15;
+
+                      if (deptColumn === "B") {
+                        startDay = 16 + skipNightShift;
+                        endDay = 31;
+                        skipNightShift = 0;
+                      }
 
                       for (let day = startDay; day <= endDay; day++) {
                         if (!workingDays.includes("" + day)) continue;
@@ -96,6 +104,8 @@ export function Resource() {
 
                         if (cell.v) {
                           day++;
+
+                          if (endDay === 15) skipNightShift = 1;
                           continue;
                         }
                       }
@@ -124,10 +134,8 @@ export function Resource() {
               personnel[onDuty].available &&
               personnel[onDuty].available.indexOf(nDay) >= 0
             ) {
-              const position = personnel[onDuty].available.indexOf(nDay);
-              personnel[onDuty].available = personnel[onDuty].available.splice(
-                position,
-                position
+              personnel[onDuty].available = personnel[onDuty].available.filter(
+                (i) => i !== nDay
               );
             }
           }
@@ -148,7 +156,7 @@ export function Resource() {
     if (departments && !selectDept) setSelectDept(Object.keys(departments)[0]);
   }, [departments]);
 
-  console.log(pgys, departments);
+  // console.log(pgys, departments);
 
   return (
     <BlockStack gap="300">
