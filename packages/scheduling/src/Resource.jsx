@@ -173,7 +173,7 @@ export function Resource() {
           <IndexTable
             itemCount={Object.keys(pgys).length}
             selectable={false}
-            headings={[{ title: "姓名" }, { title: "可值班日期" }]}
+            headings={[{ title: "姓名" }, { title: "可排門診日期" }]}
           >
             {Object.keys(pgys).map((person) => (
               <IndexTable.Row key={person}>
@@ -190,7 +190,7 @@ export function Resource() {
       {departments && (
         <Card>
           <Select
-            label="各科值班人力（扣除前一天值夜）"
+            label="各科白班人力（扣除前一天值夜）"
             options={Object.keys(departments).map((key) => ({
               label: key,
               value: key,
