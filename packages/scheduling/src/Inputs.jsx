@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, InlineStack, TextField, Button } from "@shopify/polaris";
+import { Card, InlineStack, TextField } from "@shopify/polaris";
 import { useGlobal } from "./hooks/useGlobal";
 
 export function Inputs() {
@@ -45,41 +45,6 @@ export function Inputs() {
           autoComplete="off"
         />
       </InlineStack>
-
-      {/* <InlineStack gap="300" align="space-between" wrap={false}>
-        <div style={{ width: "100%" }}>
-          <TextField
-            label="工作日(英文逗號,間隔)"
-            type="string"
-            value={days}
-            onChange={(value) => {
-              const trimmed = (value || "")
-                .split(",")
-                .map((i) => i.trim())
-                .join(",");
-              setDays(trimmed);
-              updateStorage({ days: trimmed });
-            }}
-            autoComplete="off"
-          />
-        </div>
-
-        <Button
-          onClick={() => {
-            setDays(() =>
-              [...Array(new Date(year, month, 0).getDate()).keys()]
-                .map((i) => i + 1)
-                // .filter((d) => {
-                //   const day = new Date(year, month - 1, d, 8).getDay();
-                //   return day === 6 || day === 0 ? false : true;
-                // })
-                .join(",")
-            );
-          }}
-        >
-          依日曆計算工作日
-        </Button>
-      </InlineStack> */}
 
       <TextField
         label="Sheet"

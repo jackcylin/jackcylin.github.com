@@ -74,7 +74,7 @@ export function Clinic() {
   const plan = useCallback(() => {
     if (!pgys || !departments) setError("沒有排班資料");
 
-    createSchedule(departments, pgys, clinics, maxAttendee, maxClinic);
+    createSchedule(pgys, clinics, maxAttendee, maxClinic);
     setClinics(clinics);
     setPgys(pgys);
     setPlanned(true);
@@ -261,9 +261,29 @@ function sort(source) {
   });
 }
 
-function createSchedule(departments, interns, clinics, maxAttendee, maxClinic) {
+function createSchedule(interns, clinics, maxAttendee, maxClinic) {
+  // console.log(clinics, interns);
+
+  const sortedClinics = Object.keys(clinics).sort((a, b) => {
+    const aDetail = clinics[a].detail || "";
+    const bDetail = clinics[b].detail || "";
+
+    if (
+      (aDetail.includes("下午") && bDetail.includes("下午")) ||
+      (aDetail.includes("上午") && bDetail.includes("上午"))
+    )
+      return a.day - b.day;
+
+    if (aDetail.includes("下午") && !bDetail.includes("下午")) return -1;
+
+    if (!aDetail.includes("下午") && bDetail.includes("下午")) return 1;
+  });
+
+  // for (const clinic of sortedClinics)
+  //   console.log(clinics[clinic])
+
   // Loop through each clinic to staff it
-  for (const clinic of Object.keys(clinics)) {
+  for (const clinic of sortedClinics) {
     // Find interns who are available on this clinic's day AND have less than 2 assignments
     let candidates = Object.keys(interns).filter((intern) => {
       const clinicDay = clinics[clinic].day;
@@ -272,7 +292,6 @@ function createSchedule(departments, interns, clinics, maxAttendee, maxClinic) {
         interns[intern].available.includes(clinicDay) &&
         interns[intern].count < maxClinic
       );
-      // departments[clinics[clinic].day].duty.includes(intern) &&
     });
 
     // Prioritize fairness: sort candidates by who has fewer assignments

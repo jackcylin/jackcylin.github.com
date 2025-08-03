@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { BlockStack, Card, IndexTable, Select } from "@shopify/polaris";
+import {
+  BlockStack,
+  Card,
+  IndexTable,
+  Select,
+  InlineStack,
+  RadioButton,
+} from "@shopify/polaris";
 import { useGlobal } from "./hooks/useGlobal";
 import { ReadFile } from "./ReadFile";
 
@@ -103,10 +110,10 @@ export function Resource() {
                         }
 
                         if (cell.v) {
+                          skipNightShift = day === 15 ? 1 : 0;
                           day++;
-
-                          if (endDay === 15) skipNightShift = 1;
-                          continue;
+                        } else {
+                          skipNightShift = 0;
                         }
                       }
                     });
@@ -168,24 +175,7 @@ export function Resource() {
         />
       </Card>
 
-      {Object.keys(pgys).length ? (
-        <Card>
-          <IndexTable
-            itemCount={Object.keys(pgys).length}
-            selectable={false}
-            headings={[{ title: "姓名" }, { title: "可排門診日期" }]}
-          >
-            {Object.keys(pgys).map((person) => (
-              <IndexTable.Row key={person}>
-                <IndexTable.Cell>{person}</IndexTable.Cell>
-                <IndexTable.Cell>
-                  {pgys[person].available.join(", ")}
-                </IndexTable.Cell>
-              </IndexTable.Row>
-            ))}
-          </IndexTable>
-        </Card>
-      ) : null}
+      <DutyDays interns={pgys} />
 
       {departments && (
         <Card>
@@ -233,5 +223,58 @@ export function Resource() {
         </Card>
       )}
     </BlockStack>
+  );
+}
+
+function DutyDays({ interns }) {
+  const { year, month } = useGlobal();
+  const [available, setAvaiable] = useState(false);
+
+  if (!Object.keys(interns).length) return;
+
+  const days = [...Array(new Date(year, month, 0).getDate()).keys()].map(
+    (i) => i + 1
+  );
+
+  return (
+    <Card>
+      <BlockStack gap="300" inlineAlign="center">
+        <InlineStack gap="300">
+          <RadioButton
+            label={"可排門診日期"}
+            name="available"
+            checked={available}
+            onChange={() => setAvaiable(true)}
+          />
+          <RadioButton
+            label={"不可排門診日期(off 或 值班隔天)"}
+            name="available"
+            checked={!available}
+            onChange={() => setAvaiable(false)}
+          />
+        </InlineStack>
+
+        <IndexTable
+          itemCount={Object.keys(interns).length}
+          selectable={false}
+          headings={[{ title: "姓名" }, { title: "日期" }]}
+        >
+          {Object.keys(interns).map((person) => (
+            <IndexTable.Row key={person}>
+              <IndexTable.Cell>{person}</IndexTable.Cell>
+              <IndexTable.Cell>
+                {available
+                  ? interns[person].available.join(", ")
+                  : days
+                      .filter(
+                        (d) => interns[person].available.includes(d) === false
+                      )
+                      .join(", ")}
+              </IndexTable.Cell>
+            </IndexTable.Row>
+          ))}
+        </IndexTable>
+      </BlockStack>
+    </Card>
   );
 }
