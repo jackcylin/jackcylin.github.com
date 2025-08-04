@@ -7,12 +7,10 @@ const DEFAULT = {
   includes: "PGY,R1,R2,R3",
   plans: "PGY,R1",
   excludes: "外訓,特休,休假",
-  days: "",
 };
 
 export const GlobalContext = createContext();
 
-// eslint-disable-next-line react/prop-types
 export function GlobalProvider({ children }) {
   const [nightShift] = useState("夜班值班表");
   const [inputs, setInputs] = useState();
@@ -21,7 +19,6 @@ export function GlobalProvider({ children }) {
   const [includes, setIncludes] = useState();
   const [excludes, setExcludes] = useState();
   const [plans, setPlans] = useState();
-  const [days, setDays] = useState();
   const [columns] = useState(() =>
     [...Array(26).keys()]
       .map((i) => String.fromCharCode(i + 65))
@@ -52,15 +49,6 @@ export function GlobalProvider({ children }) {
     setClinics(JSON.parse(localStorage.getItem("clinics") || "{}"));
   }, []);
 
-  useEffect(() => {
-    if (year && month)
-      setDays(
-        [...Array(new Date(year, month, 0).getDate()).keys()]
-          .map((i) => i + 1)
-          .join(",")
-      );
-  }, [year, month]);
-
   const updateStorage = (changes) => {
     const updated = { ...inputs, ...changes };
     localStorage.setItem(KEY, JSON.stringify(updated));
@@ -80,7 +68,6 @@ export function GlobalProvider({ children }) {
         setYear,
         month,
         setMonth,
-        days, // 工作日(1,2,3...)
         nightShift, // 表格 "夜班值班表"
         columns,
         updateStorage,

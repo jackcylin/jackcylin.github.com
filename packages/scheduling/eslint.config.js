@@ -8,7 +8,6 @@ export default defineConfig([
     files: ["**/*.{js,mjs,cjs,jsx}"],
     plugins: { js },
     extends: ["js/recommended"],
-    // rules: [{"react/prop-types": "off"}]
   },
   {
     files: ["**/*.{js,mjs,cjs,jsx}"],

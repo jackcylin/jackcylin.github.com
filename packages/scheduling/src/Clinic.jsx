@@ -28,8 +28,46 @@ const MONTHS = {
   12: "十二月",
 };
 
+const CALENDER = {
+  B6: { monthWeek: 1, weekDay: 1 },
+  C6: { monthWeek: 1, weekDay: 2 },
+  D6: { monthWeek: 1, weekDay: 3 },
+  E6: { monthWeek: 1, weekDay: 4 },
+  F6: { monthWeek: 1, weekDay: 5 },
+  G6: { monthWeek: 1, weekDay: 6 },
+  H6: { monthWeek: 1, weekDay: 7 },
+  B8: { monthWeek: 2, weekDay: 1 },
+  C8: { monthWeek: 2, weekDay: 2 },
+  D8: { monthWeek: 2, weekDay: 3 },
+  E8: { monthWeek: 2, weekDay: 4 },
+  F8: { monthWeek: 2, weekDay: 5 },
+  G8: { monthWeek: 2, weekDay: 6 },
+  H8: { monthWeek: 2, weekDay: 7 },
+  B10: { monthWeek: 3, weekDay: 1 },
+  C10: { monthWeek: 3, weekDay: 2 },
+  D10: { monthWeek: 3, weekDay: 3 },
+  E10: { monthWeek: 3, weekDay: 4 },
+  F10: { monthWeek: 3, weekDay: 5 },
+  G10: { monthWeek: 3, weekDay: 6 },
+  H10: { monthWeek: 3, weekDay: 7 },
+  B12: { monthWeek: 4, weekDay: 1 },
+  C12: { monthWeek: 4, weekDay: 2 },
+  D12: { monthWeek: 4, weekDay: 3 },
+  E12: { monthWeek: 4, weekDay: 4 },
+  F12: { monthWeek: 4, weekDay: 5 },
+  G12: { monthWeek: 4, weekDay: 6 },
+  H12: { monthWeek: 4, weekDay: 7 },
+  B14: { monthWeek: 5, weekDay: 1 },
+  C14: { monthWeek: 5, weekDay: 2 },
+  D14: { monthWeek: 5, weekDay: 3 },
+  E14: { monthWeek: 5, weekDay: 4 },
+  F14: { monthWeek: 5, weekDay: 5 },
+  G14: { monthWeek: 5, weekDay: 6 },
+  H14: { monthWeek: 5, weekDay: 7 },
+};
+
 export function Clinic() {
-  const { month, clinics, setClinics, pgys, setPgys, departments } =
+  const { year, month, clinics, setClinics, pgys, setPgys, departments } =
     useGlobal();
   const [workbook, setWorkbook] = useState();
   const [error, setError] = useState();
@@ -39,6 +77,8 @@ export function Clinic() {
 
   useEffect(() => {
     if (workbook) {
+      setCalendarDetailsForMonth(year, month);
+
       const sheet = workbook.Sheets[MONTHS[month]];
       const res = sort(
         Object.keys(sheet).filter(
@@ -53,7 +93,7 @@ export function Clinic() {
           .filter((line) => /\(\s*\)/.test(line))
           .forEach((line) => {
             items[Object.keys(items).length + 1] = {
-              day: Object.keys(items).length + 1,
+              day: CALENDER[i] ? CALENDER[i].monthDay : 0,
               detail: line.split(/\(\s*\)/[1])[0],
               attendee: [],
             };
@@ -61,7 +101,7 @@ export function Clinic() {
       });
       setClinics(items);
     }
-  }, [workbook]);
+  }, [workbook, year, month]);
 
   useEffect(() => {
     const clone = JSON.parse(JSON.stringify(clinics));
@@ -285,7 +325,7 @@ function createSchedule(interns, clinics, maxAttendee, maxClinic) {
   // Loop through each clinic to staff it
   for (const clinic of sortedClinics) {
     // Find interns who are available on this clinic's day AND have less than 2 assignments
-    let candidates = Object.keys(interns).filter((intern) => {
+    const candidates = Object.keys(interns).filter((intern) => {
       const clinicDay = clinics[clinic].day;
 
       return (
@@ -312,4 +352,51 @@ function createSchedule(interns, clinics, maxAttendee, maxClinic) {
   }
 
   return { clinics, interns };
+}
+
+/**
+ * Calculates the week number of a given date within its month.
+ * (Assumes a week starts on Sunday).
+ * @param {Date} date The date to check.
+ * @returns {number} The week number of the month (1-6).
+ */
+function getWeekOfMonth(date) {
+  const dayOfMonth = date.getDate();
+  const firstDayOfMonth = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    1
+  ).getDay();
+  return Math.ceil((dayOfMonth + firstDayOfMonth) / 7);
+}
+
+/**
+ * Lists every day of a month with its day name, week of month, and week of year.
+ * @param {number} year The full year (e.g., 2025).
+ * @param {number} month The month (1 for January, 12 for December).
+ * @returns {Array<Object>} An array of objects with calendar details for each day.
+ */
+function setCalendarDetailsForMonth(year, month) {
+  console.log(`year ${year}, month ${month}`);
+  const date = new Date(year, month - 1, 1);
+
+  while (date.getMonth() === month - 1) {
+    const monthDay = date.getDate();
+    const weekDay = date.getDay() === 0 ? 7 : date.getDay();
+    const monthWeek =
+      date.getDay() === 0 ? getWeekOfMonth(date) - 1 : getWeekOfMonth(date);
+
+    Object.keys(CALENDER).find((cell) => {
+      if (
+        CALENDER[cell].monthWeek === monthWeek &&
+        CALENDER[cell].weekDay === weekDay
+      ) {
+        CALENDER[cell].monthDay = monthDay;
+        return true;
+      }
+      return false;
+    });
+
+    date.setDate(date.getDate() + 1);
+  }
 }

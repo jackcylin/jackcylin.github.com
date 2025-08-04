@@ -19,11 +19,12 @@ export function Resource() {
     plans,
     excludes,
     columns,
-    days,
     pgys,
     setPgys,
     departments,
     setDepartments,
+    year,
+    month,
   } = useGlobal();
   const [workbook, setWorkbook] = useState();
 
@@ -33,6 +34,9 @@ export function Resource() {
       const depts = {};
       let personnel = {};
       const missing = [];
+      const days = [...Array(new Date(year, month, 0).getDate()).keys()].map(
+        (i) => i + 1
+      );
 
       const workSheet = workbook.Sheets[nightShift];
 
@@ -69,12 +73,11 @@ export function Resource() {
                     .map((i) => i.trim())
                     .forEach((dept) => {
                       if (!depts[dept]) {
-                        depts[dept] = days.split(",").reduce((acc, cur) => {
+                        depts[dept] = days.reduce((acc, cur) => {
                           acc[cur] = { duty: [] };
                           return acc;
                         }, {});
                       }
-                      const workingDays = days.split(",");
 
                       let startDay = 1,
                         endDay = 15;
@@ -86,8 +89,6 @@ export function Resource() {
                       }
 
                       for (let day = startDay; day <= endDay; day++) {
-                        if (!workingDays.includes("" + day)) continue;
-
                         const column = columns.split(",")[day - 1];
                         const id = `${column}${row}`;
                         const cell = workSheet[id];
@@ -149,12 +150,6 @@ export function Resource() {
         })
       );
 
-      //   (dept) =>
-      //     departments[dept][clinicDay] &&
-      //     departments[dept][clinicDay].duty.includes(intern) &&
-      //     departments[dept][clinicDay].duty.length > 1
-      // );
-
       setPgys(personnel);
     }
   }, [workbook]);
@@ -162,8 +157,6 @@ export function Resource() {
   useEffect(() => {
     if (departments && !selectDept) setSelectDept(Object.keys(departments)[0]);
   }, [departments]);
-
-  // console.log(pgys, departments);
 
   return (
     <BlockStack gap="300">
@@ -238,7 +231,7 @@ function DutyDays({ interns }) {
 
   return (
     <Card>
-      <BlockStack gap="300" inlineAlign="center">
+      <BlockStack gap="300" inlineAlign="left">
         <InlineStack gap="300">
           <RadioButton
             label={"可排門診日期"}
